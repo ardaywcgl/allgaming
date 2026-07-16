@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { motion } from "framer-motion";
 
 const FOOTER_LINKS = {
   Platform: [
@@ -31,7 +32,6 @@ const FOOTER_LINKS = {
   ],
 };
 
-// Sosyal medya linkleri — emoji ikon kullanıyoruz (JSX sorununu önlemek için)
 const FEATURED_SOCIAL = [
   { id: "footer-discord", label: "Discord", href: "#", emoji: "💬", color: "#5865F2" },
   { id: "footer-twitch",  label: "Twitch",  href: "#", emoji: "🎮", color: "#9146FF" },
@@ -46,19 +46,32 @@ const OTHER_SOCIAL = [
 
 export default function Footer() {
   return (
-    <footer style={{ borderTop: "1px solid rgba(255,255,255,0.06)", background: "var(--color-bg-secondary)" }}>
+    <footer
+      className="relative"
+      style={{
+        borderTop: "1px solid var(--color-border)",
+        background: "linear-gradient(180deg, transparent 0%, rgba(10,4,24,0.6) 50%, rgba(5,1,8,0.9) 100%)",
+        boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04), 0 -8px 32px rgba(0,0,0,0.3)",
+      }}
+    >
       <div className="max-w-7xl mx-auto px-4 py-12">
-
-        {/* Üst: Logo + Sosyal Medya */}
+        {/* Top: Logo + Social */}
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-8 mb-12">
           <div className="max-w-sm">
             <div className="flex items-center gap-2 mb-3">
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-black text-sm"
-                style={{ background: "var(--gradient-purple)" }}>
+              <motion.div
+                whileHover={{ rotate: -8, scale: 1.1 }}
+                transition={{ type: "spring", stiffness: 300, damping: 15 }}
+                className="w-9 h-9 rounded-xl flex items-center justify-center text-white font-black text-sm"
+                style={{
+                  background: "var(--gradient-magenta)",
+                  boxShadow: "0 4px 16px rgba(255,45,146,0.3), inset 0 1px 0 rgba(255,255,255,0.2)",
+                }}
+              >
                 HG
-              </div>
+              </motion.div>
               <span className="font-black text-xl text-white">
-                Hepsi<span className="text-gradient-purple">Gaming</span>
+                Hepsi<span className="text-gradient-hot">Gaming</span>
               </span>
             </div>
             <p className="text-sm text-slate-500 leading-relaxed">
@@ -67,50 +80,51 @@ export default function Footer() {
             </p>
           </div>
 
-          {/* Sosyal Medya */}
+          {/* Social */}
           <div className="flex flex-col gap-3">
             <p className="text-xs text-slate-500 font-semibold uppercase tracking-wider">Bizi Takip Edin</p>
             <div className="flex items-center flex-wrap gap-3">
-              {/* Discord & Twitch — özel vurgulu butonlar */}
               {FEATURED_SOCIAL.map((social) => (
-                <a
+                <motion.a
                   key={social.id}
                   id={social.id}
                   href={social.href}
                   aria-label={social.label}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all hover:scale-105 no-underline"
+                  whileHover={{ scale: 1.08, y: -2 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all no-underline"
                   style={{
-                    background: `${social.color}22`,
+                    background: `${social.color}18`,
                     color: social.color,
-                    border: `1px solid ${social.color}44`,
+                    border: `1px solid ${social.color}38`,
                   }}
                 >
                   <span>{social.emoji}</span>
                   <span>{social.label}</span>
-                </a>
+                </motion.a>
               ))}
 
-              {/* Diğer sosyal linkler */}
               {OTHER_SOCIAL.map((social) => (
-                <a
+                <motion.a
                   key={social.id}
                   id={social.id}
                   href={social.href}
                   aria-label={social.label}
                   title={social.label}
-                  className="btn-icon hover:scale-110 transition-transform no-underline"
+                  whileHover={{ scale: 1.15, rotate: -5 }}
+                  whileTap={{ scale: 0.92 }}
+                  className="btn-icon no-underline"
                 >
                   <span className="text-base">{social.emoji}</span>
-                </a>
+                </motion.a>
               ))}
             </div>
           </div>
         </div>
 
-        {/* Neon Çizgi */}
         <div className="neon-divider" />
 
-        {/* Link Sütunları */}
+        {/* Link columns */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 py-10">
           {Object.entries(FOOTER_LINKS).map(([section, links]) => (
             <div key={section}>
@@ -120,7 +134,7 @@ export default function Footer() {
                   <li key={link.href}>
                     <Link
                       href={link.href}
-                      className="text-sm text-slate-500 hover:text-slate-200 transition-colors no-underline"
+                      className="text-sm text-slate-500 hover:text-cyan-400 transition-colors no-underline"
                     >
                       {link.label}
                     </Link>
@@ -133,7 +147,7 @@ export default function Footer() {
 
         <div className="neon-divider" />
 
-        {/* Alt Bar */}
+        {/* Bottom bar */}
         <div className="flex flex-col md:flex-row items-center justify-between gap-4 pt-6 text-sm text-slate-600">
           <p>© 2026 HepsiGaming. Tüm hakları saklıdır.</p>
           <p className="text-xs text-center">

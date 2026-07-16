@@ -57,7 +57,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#7c3aed",
+  themeColor: "#050108",
   width: "device-width",
   initialScale: 1,
 };
@@ -70,31 +70,45 @@ export default function RootLayout({
   return (
     <html lang="tr" className={`${inter.variable} ${jetbrainsMono.variable}`}>
       <head>
-        {/* Google Fonts preload */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
       <body className="font-sans antialiased">
-        {/* Arka plan grid efekti */}
-        <div className="fixed inset-0 -z-10" aria-hidden="true">
+        {/* Ambient depth orbs (organic, slow-drifting) */}
+        <div className="fixed inset-0 -z-10 pointer-events-none overflow-hidden" aria-hidden="true">
           <div
-            className="absolute inset-0"
+            className="absolute rounded-full filter blur-[120px] orb-drift-1"
             style={{
-              backgroundImage:
-                "radial-gradient(ellipse 80% 60% at 50% -20%, rgba(124,58,237,0.15) 0%, transparent 70%)",
+              width: "520px",
+              height: "520px",
+              background: "radial-gradient(circle, rgba(168,85,247,0.12) 0%, transparent 70%)",
+              top: "-10%",
+              left: "5%",
             }}
           />
           <div
-            className="absolute inset-0 opacity-[0.03]"
+            className="absolute rounded-full filter blur-[140px] orb-drift-2"
             style={{
-              backgroundImage:
-                "linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)",
-              backgroundSize: "50px 50px",
+              width: "620px",
+              height: "620px",
+              background: "radial-gradient(circle, rgba(45,212,255,0.08) 0%, transparent 70%)",
+              bottom: "5%",
+              right: "0%",
+            }}
+          />
+          <div
+            className="absolute rounded-full filter blur-[100px] orb-drift-1"
+            style={{
+              width: "400px",
+              height: "400px",
+              background: "radial-gradient(circle, rgba(255,45,146,0.06) 0%, transparent 70%)",
+              top: "40%",
+              right: "25%",
+              animationDelay: "4s",
             }}
           />
         </div>
 
-        {/* Ana içerik */}
         {children}
       </body>
     </html>
