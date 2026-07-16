@@ -1,0 +1,158 @@
+version: "3.9"
+
+services:
+  # ─────────────────────────────────────────────
+  # PostgreSQL 16
+  # ─────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: hepsigaming_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-hepsigaming}
+      POSTGRES_USER: ${POSTGRES_USER:-hgadmin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infra/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-hgadmin} -d ${POSTGRES_DB:-hepsigaming}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─────────────────────────────────────────────
+  # Redis 7
+  # ─────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: hepsigaming_redis
+    restart: unless-stopped
+    command: redis-server /usr/local/etc/redis/redis.conf
+    volumes:
+      - redis_data:/data
+      - ./infra/redis/redis.conf:/usr/local/etc/redis/redis.conf:ro
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─────────────────────────────────────────────
+  # FastAPI Backend
+  # ─────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: hepsigaming_backend
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-hgadmin}:${POSTGRES_PASSWORD:-changeme}@postgres:5432/${POSTGRES_DB:-hepsigaming}
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+      - uploaded_files:/app/uploads
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ─────────────────────────────────────────────
+  # Celery Worker (Scraper servisi)
+  # ─────────────────────────────────────────────
+  celery_worker:
+    build:
+      context: ./scrapers
+      dockerfile: Dockerfile
+    container_name: hepsigaming_celery_worker
+    restart: unless-stopped
+    command: celery -A celery_app worker --loglevel=info --concurrency=4
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-hgadmin}:${POSTGRES_PASSWORD:-changeme}@postgres:5432/${POSTGRES_DB:-hepsigaming}
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/1
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./scrapers:/app
+
+  # ─────────────────────────────────────────────
+  # Celery Beat (Zamanlayıcı)
+  # ─────────────────────────────────────────────
+  celery_beat:
+    build:
+      context: ./scrapers
+      dockerfile: Dockerfile
+    container_name: hepsigaming_celery_beat
+    restart: unless-stopped
+    command: celery -A celery_app beat --loglevel=info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    env_file:
+      - .env
+    environment:
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/1
+    depends_on:
+      - redis
+      - celery_worker
+
+  # ─────────────────────────────────────────────
+  # Next.js Frontend
+  # ─────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: hepsigaming_frontend
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://backend:8000}
+    depends_on:
+      - backend
+    ports:
+      - "3000:3000"
+
+  # ─────────────────────────────────────────────
+  # Nginx Reverse Proxy
+  # ─────────────────────────────────────────────
+  nginx:
+    image: nginx:alpine
+    container_name: hepsigaming_nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - nginx_logs:/var/log/nginx
+    depends_on:
+      - frontend
+      - backend
+
+volumes:
+  postgres_data:
+  redis_data:
+  uploaded_files:
+  nginx_logs:

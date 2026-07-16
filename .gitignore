@@ -1,0 +1,51 @@
+# HepsiGaming Git Ignore
+.env
+.env.local
+.env.production
+
+# Next.js
+frontend/.next/
+frontend/node_modules/
+frontend/out/
+frontend/.DS_Store
+
+# Python
+backend/__pycache__/
+backend/.venv/
+backend/*.pyc
+scrapers/__pycache__/
+scrapers/.venv/
+scrapers/*.pyc
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+.pytest_cache/
+
+# Docker volumes (yerel geliştirme)
+postgres_data/
+redis_data/
+
+# Uploads
+backend/uploads/
+
+# SSL sertifikaları (asla commit etme!)
+nginx/ssl/*.pem
+nginx/ssl/*.key
+nginx/ssl/*.crt
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+nginx/logs/
+
+# Alembic (local)
+backend/alembic/versions/*.pyc
